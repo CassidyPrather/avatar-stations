@@ -1,0 +1,236 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3092882151361813354
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4286236926666851906}
+  - component: {fileID: 6653661066274133877}
+  - component: {fileID: 1172084647743330963}
+  m_Layer: 0
+  m_Name: Wirenook Stations
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4286236926666851906
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3092882151361813354}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6291698572440991781}
+  - {fileID: 1471786250078362411}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6653661066274133877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3092882151361813354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ef83cb0c23d4d7c9d41021e544a1978, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  menuToAppend: {fileID: 0}
+  installTargetMenu: {fileID: 0}
+--- !u!114 &1172084647743330963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3092882151361813354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b29d45007c5493d926d2cd45a489529, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _modularAvatarVersionTag:
+    UpdatedAtVersion: 1.18.7
+    MinimumVersion: 1.18.0
+  Control:
+    name: Stations
+    icon: {fileID: 2800000, guid: c2b87db938d5ff04b84797149051430c, type: 3}
+    type: 103
+    parameter:
+      name: 
+    value: 1
+    style: 0
+    subMenu: {fileID: 0}
+    subParameters: []
+    labels: []
+  MenuSource: 1
+  menuSource_otherObjectChildren: {fileID: 0}
+  isSynced: 1
+  isSaved: 0
+  isDefault: 0
+  automaticValue: 0
+  label: Stations
+--- !u!1001 &4033735871117402809
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4286236926666851906}
+    m_Modifications:
+    - target: {fileID: 7468186176746343, guid: 6db7975ecc1fcec499a784c12f9b0b43, type: 3}
+      propertyPath: m_Name
+      value: Wirenook Carry Seat
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 453922123665370978, guid: 6db7975ecc1fcec499a784c12f9b0b43, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 6db7975ecc1fcec499a784c12f9b0b43, type: 3}
+--- !u!4 &6291698572440991781 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6965432427826731676, guid: 6db7975ecc1fcec499a784c12f9b0b43,
+    type: 3}
+  m_PrefabInstance: {fileID: 4033735871117402809}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &6234254002959567288
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 4286236926666851906}
+    m_Modifications:
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191964171187211537, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+        type: 3}
+      propertyPath: m_Name
+      value: Wirenook Teleporter
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 8915620086121574525, guid: 75a1c3a2f10aca146bc97ae09793f61d, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 75a1c3a2f10aca146bc97ae09793f61d, type: 3}
+--- !u!4 &1471786250078362411 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4821192701402665619, guid: 75a1c3a2f10aca146bc97ae09793f61d,
+    type: 3}
+  m_PrefabInstance: {fileID: 6234254002959567288}
+  m_PrefabAsset: {fileID: 0}
