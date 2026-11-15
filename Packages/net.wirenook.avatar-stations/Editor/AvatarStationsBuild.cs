@@ -35,6 +35,15 @@ namespace Wirenook.AvatarStations.Editor
         /// <summary>Stations VRChat keeps working on one avatar.</summary>
         public const int StationBudget = 6;
 
+        /// <summary>Checks the portal's synced anchor as far as the editor can.</summary>
+        [MenuItem("Tools/Wirenook/Avatar Stations/Verify")]
+        public static string Verify()
+        {
+            var report = SyncedAnchorCheck.Run(TeleporterPrefab, Generated + "/teleporter-fx.controller", "WN/Portal");
+            Debug.Log("[avatar-stations] " + report);
+            return report;
+        }
+
         [MenuItem("Tools/Wirenook/Avatar Stations/Rebuild")]
         public static void Rebuild()
         {
@@ -115,6 +124,7 @@ namespace Wirenook.AvatarStations.Editor
         private static void Teleporter()
         {
             const string parameter = "WN/Portal";
+            SyncedAnchor.Prepare();
             FeaturePrefab.Edit(TeleporterPrefab, root =>
             {
                 var carry = FeaturePrefab.Child(root, "Carry");
@@ -126,7 +136,9 @@ namespace Wirenook.AvatarStations.Editor
                 arrival.transform.localPosition = new Vector3(0f, 0f, -0.8f);
 
                 var entrance = FeaturePrefab.Child(root, "Entrance");
-                WorldAnchor.Configure(entrance, carry.transform);
+                // Synced, not just frozen: whoever is far enough behind to
+                // need the portal may well load the avatar after it was dropped.
+                var rig = SyncedAnchor.Configure(root, entrance, carry.transform, parameter);
                 var model = RigidProp.Build(entrance, Models + "/portal.fbx", Generated);
                 var frame = FeaturePrefab.Find(model, "Portal");
                 var swirl = FeaturePrefab.Find(model, "Portal.Swirl");
@@ -144,8 +156,7 @@ namespace Wirenook.AvatarStations.Editor
                 // bone's axes that is depends on the export.
                 var through = swirl.InverseTransformDirection(model.transform.forward);
                 var axis = DominantAxis(through);
-                var states = WorldAnchor.DropLayer(fx, "Teleporter", parameter,
-                    FeaturePrefab.PathTo(root, entrance.transform), FeaturePrefab.PathTo(root, frame), (clip, phase) =>
+                var states = rig.DropLayers(fx, "Teleporter", parameter, FeaturePrefab.PathTo(root, frame), (clip, phase) =>
                     {
                         clip.Constant(stationPath, typeof(BoxCollider), "m_Enabled", phase == "on" ? 1f : 0f);
                         if (phase != "on") return;
@@ -156,7 +167,7 @@ namespace Wirenook.AvatarStations.Editor
                 fx.Save();
 
                 FeaturePrefab.Merge(root, fx.Controller);
-                FeaturePrefab.Parameters(root, FeaturePrefab.SyncedBool(parameter));
+                FeaturePrefab.Parameters(root, rig.Parameters().Prepend(FeaturePrefab.SyncedBool(parameter)).ToArray());
                 FeaturePrefab.InstallMenu(root);
                 FeaturePrefab.MenuToggle(root, "Catch-up Portal", "catch-up", parameter);
                 FeaturePrefab.Describe(root, "teleporter", "Catch-up portal", "catch-up", "teleporter", 70);

@@ -16,8 +16,8 @@ and animator at build time.
 | Prefab | Menu | What it does | Stations | Synced bits |
 | --- | --- | --- | --- | --- |
 | `Wirenook Carry Seat` | Carry Seat | A cloud floats beside you; a friend clicks it to sit and is carried along. | 1 | 1 |
-| `Wirenook Teleporter` | Catch-up Portal | A doorway appears a step in front of you and stays there. Anyone who clicks it arrives just behind you, wherever you have gone since. | 1 | 1 |
-| `Wirenook Stations` | Stations ▸ | Both of the above behind one menu entry. | 2 | 2 |
+| `Wirenook Teleporter` | Catch-up Portal | A doorway appears a step in front of you and stays there. Anyone who clicks it arrives just behind you, wherever you have gone since. | 1 | 67 |
+| `Wirenook Stations` | Stations ▸ | Both of the above behind one menu entry. | 2 | 68 |
 
 ### Carry seat
 
@@ -37,9 +37,14 @@ at the doorway (held in the world by
 arrival point is a spot just behind you. The traveller arrives standing and
 is carried with you until they walk or jump, which lets go.
 
-Switching the portal off picks it up. World-sync's limits apply: people
-present when you drop it see it in the same place; someone who loads your
-avatar afterwards does not until you drop it again.
+Switching the portal off picks it up.
+
+The portal's position is synced, not just frozen in place, which is where
+its 66 extra bits go. Whoever is far enough behind to need it may well
+load your avatar after you dropped it, and would otherwise find the
+doorway wherever you happened to be standing at that moment. The
+[world-sync README](https://github.com/CassidyPrather/world-sync) explains
+how, and what about it is still untested.
 
 ## The station pool
 
