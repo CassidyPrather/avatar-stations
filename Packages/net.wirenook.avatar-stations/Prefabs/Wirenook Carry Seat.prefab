@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 453922123665370978}
   - component: {fileID: 1000201196814337479}
   - component: {fileID: 1413002758315092843}
+  - component: {fileID: 4585785512193599511}
   m_Layer: 0
   m_Name: Wirenook Carry Seat
   m_TagString: Untagged
@@ -158,6 +159,18 @@ MonoBehaviour:
   tag: carry seat
   tagPriority: 60
   joinAvatarMesh: 0
+--- !u!114 &4585785512193599511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7468186176746343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee1467e0dd24a5b4781552a7a0a1d130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &812971633967819179
 GameObject:
   m_ObjectHideFlags: 0

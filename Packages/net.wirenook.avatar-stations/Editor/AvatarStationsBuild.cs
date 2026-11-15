@@ -110,7 +110,9 @@ namespace Wirenook.AvatarStations.Editor
                 FeaturePrefab.Parameters(root, FeaturePrefab.SyncedBool(parameter));
                 FeaturePrefab.InstallMenu(root);
                 FeaturePrefab.MenuToggle(root, "Carry Seat", "carry", parameter);
-                FeaturePrefab.Describe(root, "carry-seat", "Carry seat", "carry", "carry seat", 60);
+                // A station is entered through its collider, and VRChat ranks an
+                // Android or iOS avatar with any collider Very Poor.
+                FeaturePrefab.Describe(root, "carry-seat", "Carry seat", "carry", "carry seat", 60, pcOnly: true);
             });
         }
 
@@ -170,7 +172,7 @@ namespace Wirenook.AvatarStations.Editor
                 FeaturePrefab.Parameters(root, rig.Parameters().Prepend(FeaturePrefab.SyncedBool(parameter)).ToArray());
                 FeaturePrefab.InstallMenu(root);
                 FeaturePrefab.MenuToggle(root, "Catch-up Portal", "catch-up", parameter);
-                FeaturePrefab.Describe(root, "teleporter", "Catch-up portal", "catch-up", "teleporter", 70);
+                FeaturePrefab.Describe(root, "teleporter", "Catch-up portal", "catch-up", "teleporter", 70, pcOnly: true);
             });
         }
 
