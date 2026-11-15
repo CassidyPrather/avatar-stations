@@ -96,6 +96,7 @@ namespace Wirenook.AvatarStations.Editor
                     // throwing off whoever is seated, which disabling the
                     // station itself would do.
                     clip.Constant(stationPath, typeof(BoxCollider), "m_Enabled", phase == "on" ? 1f : 0f);
+                    Gate(clip, stationPath, phase == "on");
                     if (phase != "on") return;
 
                     // A slow bob, so the cloud floats rather than slides.
@@ -110,9 +111,7 @@ namespace Wirenook.AvatarStations.Editor
                 FeaturePrefab.Parameters(root, FeaturePrefab.SyncedBool(parameter));
                 FeaturePrefab.InstallMenu(root);
                 FeaturePrefab.MenuToggle(root, "Carry Seat", "carry", parameter);
-                // A station is entered through its collider, and VRChat ranks an
-                // Android or iOS avatar with any collider Very Poor.
-                FeaturePrefab.Describe(root, "carry-seat", "Carry seat", "carry", "carry seat", 60, pcOnly: true);
+                FeaturePrefab.Describe(root, "carry-seat", "Carry seat", "carry", "carry seat", 60);
             });
         }
 
@@ -161,6 +160,7 @@ namespace Wirenook.AvatarStations.Editor
                 var states = rig.DropLayers(fx, "Teleporter", parameter, FeaturePrefab.PathTo(root, frame), (clip, phase) =>
                     {
                         clip.Constant(stationPath, typeof(BoxCollider), "m_Enabled", phase == "on" ? 1f : 0f);
+                        Gate(clip, stationPath, phase == "on");
                         if (phase != "on") return;
                         clip.Curve(swirlPath, typeof(Transform), "localEulerAnglesRaw." + axis, AnimationCurve.Linear(0f, 0f, 3f, 360f));
                         clip.Loop();
@@ -172,7 +172,7 @@ namespace Wirenook.AvatarStations.Editor
                 FeaturePrefab.Parameters(root, rig.Parameters().Prepend(FeaturePrefab.SyncedBool(parameter)).ToArray());
                 FeaturePrefab.InstallMenu(root);
                 FeaturePrefab.MenuToggle(root, "Catch-up Portal", "catch-up", parameter);
-                FeaturePrefab.Describe(root, "teleporter", "Catch-up portal", "catch-up", "teleporter", 70, pcOnly: true);
+                FeaturePrefab.Describe(root, "teleporter", "Catch-up portal", "catch-up", "teleporter", 70);
             });
         }
 
@@ -196,6 +196,19 @@ namespace Wirenook.AvatarStations.Editor
             collider.size = size;
             collider.center = centre;
             collider.enabled = false;
+        }
+
+        /// <summary>
+        /// Shrinks a station to nothing while it should not be taken. On PC
+        /// the collider switch beside it already does that. Android and iOS
+        /// builds have no collider of their own to switch: VRChat disables
+        /// colliders on avatars there and gives each station a trigger
+        /// itself, which nothing here can turn off, but a trigger on an
+        /// object scaled to zero has no size to click.
+        /// </summary>
+        private static void Gate(ClipBuilder clip, string stationPath, bool open)
+        {
+            PopToggle.Scale(clip, stationPath, AnimationCurve.Constant(0f, 1f / 60f, open ? 1f : 0f));
         }
 
         private static void Offset(ClipBuilder clip, string path, Vector3 rest, Vector3 direction, AnimationCurve amount)
