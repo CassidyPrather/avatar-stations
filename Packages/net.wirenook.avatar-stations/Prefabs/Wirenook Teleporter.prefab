@@ -1956,6 +1956,7 @@ MonoBehaviour:
   id: teleporter
   label: Catch-up portal
   icon: {fileID: 2800000, guid: d116976fff5e7ee438b1ce5c9799b1ab, type: 3}
+  summaryIcon: {fileID: 2800000, guid: d116976fff5e7ee438b1ce5c9799b1ab, type: 3}
   tag: teleporter
   tagPriority: 70
   joinAvatarMesh: 0

@@ -154,6 +154,7 @@ MonoBehaviour:
   id: carry-seat
   label: Carry seat
   icon: {fileID: 2800000, guid: 2adcc0cd61979f040ae9106b635024db, type: 3}
+  summaryIcon: {fileID: 2800000, guid: 2adcc0cd61979f040ae9106b635024db, type: 3}
   tag: carry seat
   tagPriority: 60
   joinAvatarMesh: 0
