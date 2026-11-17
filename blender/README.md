@@ -6,6 +6,7 @@ Each prop is generated from code, saved here as `.blend`, validated, exported as
 | Source | Prop | Bones | Notes |
 | --- | --- | --- | --- |
 | `cloud-seat.blend` | `CloudSeat`: cloud armchair with rabbit ears, 0.8 x 0.6 m, seat 0.35 m up | `CloudSeat` (ground, under centre) | Front is forward |
+| `seats.blend` | `Seats`: four cushions twice over, 0.32 m high, in a ring of 1.15 m radius round a lamp and in a row before a 1.92 x 1.08 m screen surround | `Seats` (ground, centre; carries nothing), `Seats.Ring`, `Seats.Row` (both at the root) | Unity shows one arrangement at a time and hangs the picture in the surround. Seat positions are repeated in `AvatarStationsBuild.cs` |
 | `portal.blend` | `Portal`: oval doorway, 1.0 x 1.9 m plus ears, on a cloud base | `Portal` (ground, centre), `Portal.Swirl` (centre of opening, 0.96 m up) | Swirl: circular pinwheel, 0.44 m radius, three glow colours |
 
 ## Rebuild

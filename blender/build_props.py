@@ -1,4 +1,4 @@
-"""Builds the avatar-stations props: the cloud seat and the portal.
+"""Builds the avatar-stations props: the cloud seat, the portal and the seats.
 
     blender -b --python blender/build_props.py [-- --only STEM] [-- --previews DIR]
 
@@ -109,9 +109,78 @@ def build_portal(mesh):
     return {"Swirl": centre}
 
 
+# --------------------------------------------------------------------------
+# Seats
+# --------------------------------------------------------------------------
+
+SEATS = PropSpec("Seats", "seats", triangle_budget=1100, parts={"Ring": None, "Row": None})
+
+SEAT_HEIGHT = 0.32
+RING_RADIUS = 1.15
+SCREEN_AHEAD = 1.6
+SCREEN_CENTRE = 1.3
+SCREEN_HALF = (0.96, 0.54)
+ROW_RADIUS = 2.6
+ROW_ANGLES = (-30.0, -10.0, 10.0, 30.0)
+
+
+def seat_places():
+    """Where the four seats stand in each arrangement, as (right, forward) in metres from the prop's root."""
+    ring = [(RING_RADIUS * math.sin(math.radians(a)), RING_RADIUS * math.cos(math.radians(a)))
+            for a in (45.0, 135.0, 225.0, 315.0)]
+    row = [(ROW_RADIUS * math.sin(math.radians(a)), SCREEN_AHEAD - ROW_RADIUS * math.cos(math.radians(a)))
+           for a in ROW_ANGLES]
+    return ring, row
+
+
+def build_seats(mesh):
+    """Four cushions, twice: in a ring round a lamp, and in a row before a screen.
+
+    Each arrangement is one part, because a seat left in the world is a mesh
+    of its own and eight cushions that moved separately would be eight
+    meshes. Unity shows one part or the other. The root carries nothing.
+    """
+    colours = ("lavender", "pink", "sky", "banana")
+    ring, row = seat_places()
+
+    def cushion(part, right, forward, colour):
+        part.ellipsoid(X * right + FORWARD * forward + UP * (SEAT_HEIGHT * 0.5), (0.30, 0.30, SEAT_HEIGHT * 0.5),
+                       ["violet", colour, colour, colour, "white"], segments=8, rings=5)
+
+    circle = mesh.part("Ring")
+    for (right, forward), colour in zip(ring, colours):
+        cushion(circle, right, forward, colour)
+    # Something to sit round: a lamp on a short stand.
+    circle.lathe(UP * 0.0, UP, [(0.0, 0.16), (0.03, 0.17), (0.05, 0.05), (0.34, 0.04), (0.36, 0.09),
+                                (0.47, 0.15), (0.60, 0.11), (0.66, 0.0)],
+                 ["ink", "ink", "violet", "orange", "banana", "banana", "white"], segments=8, cap_start="ink")
+
+    theatre = mesh.part("Row")
+    for (right, forward), colour in zip(row, colours):
+        cushion(theatre, right, forward, colour)
+    # The screen's surround. Unity hangs the picture itself in the opening.
+    screen = FORWARD * SCREEN_AHEAD + UP * SCREEN_CENTRE
+    corners = ring_points(screen, X, UP, (SCREEN_HALF[0] + 0.03) * math.sqrt(2.0), (SCREEN_HALF[1] + 0.03) * math.sqrt(2.0), 4, 0.5)
+    theatre.sweep(corners, FORWARD, [(0.035, 0.035), (-0.035, 0.035), (-0.035, -0.035), (0.035, -0.035)],
+                  ["violet", "ink", "violet", "ink"], closed=True, hard_section=True)
+    # A back, so the picture is not seen through from behind.
+    theatre.polygon(ring_points(screen + FORWARD * 0.02, X, UP, SCREEN_HALF[0] * math.sqrt(2.0),
+                                SCREEN_HALF[1] * math.sqrt(2.0), 4, 0.5), "ink", FORWARD)
+    for side in (-1.0, 1.0):
+        foot = FORWARD * SCREEN_AHEAD + X * (side * 0.62)
+        leg = [ring_points(foot + UP * height, X, BACK, 0.03, 0.03, 4, 0.5)
+               for height in (0.0, SCREEN_CENTRE - SCREEN_HALF[1] - 0.03)]
+        theatre.loft(leg, "ink", cap_start="ink")
+        theatre.lathe(foot, UP, [(0.0, 0.14), (0.025, 0.14), (0.04, 0.04)], "violet", segments=6, cap_start="violet")
+    top = SCREEN_CENTRE + SCREEN_HALF[1] + 0.05
+    rabbit_ears(theatre, [(-0.2, -SCREEN_AHEAD, top), (0.2, -SCREEN_AHEAD, top)], (0.075, 0.045, 0.16), 16.0, "lavender", "pink")
+    return {"Ring": UP * 0.0, "Row": UP * 0.0}
+
+
 PROPS = [
     (CLOUD_SEAT, build_cloud_seat),
     (PORTAL, build_portal),
+    (SEATS, build_seats),
 ]
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using nadena.dev.modular_avatar.core;
@@ -30,7 +31,9 @@ namespace Wirenook.AvatarStations.Editor
 
         public const string SeatPrefab = Prefabs + "/Wirenook Carry Seat.prefab";
         public const string TeleporterPrefab = Prefabs + "/Wirenook Teleporter.prefab";
+        public const string SeatsPrefab = Prefabs + "/Wirenook Seats.prefab";
         public const string BundlePrefab = Prefabs + "/Wirenook Stations.prefab";
+        public const string EventBundlePrefab = Prefabs + "/Wirenook Stations (Event).prefab";
 
         /// <summary>Stations VRChat keeps working on one avatar.</summary>
         public const int StationBudget = 6;
@@ -39,7 +42,9 @@ namespace Wirenook.AvatarStations.Editor
         [MenuItem("Tools/Wirenook/Avatar Stations/Verify")]
         public static string Verify()
         {
-            var report = SyncedAnchorCheck.Run(TeleporterPrefab, Generated + "/teleporter-fx.controller", "WN/Portal");
+            var report = "Portal: " + SyncedAnchorCheck.Run(TeleporterPrefab, Generated + "/teleporter-fx.controller", "WN/Portal") +
+                         System.Environment.NewLine +
+                         "Seats: " + SyncedAnchorCheck.Run(SeatsPrefab, Generated + "/seats-fx.controller", "WN/Seats");
             Debug.Log("[avatar-stations] " + report);
             return report;
         }
@@ -49,7 +54,9 @@ namespace Wirenook.AvatarStations.Editor
         {
             CarrySeat();
             Teleporter();
-            Bundle();
+            Seats();
+            Bundle(BundlePrefab, SeatPrefab, TeleporterPrefab);
+            Bundle(EventBundlePrefab, SeatPrefab, TeleporterPrefab, SeatsPrefab);
             AssetDatabase.SaveAssets();
             Debug.Log("[avatar-stations] Rebuilt prefabs and animators.");
         }
@@ -176,6 +183,141 @@ namespace Wirenook.AvatarStations.Editor
             });
         }
 
+        // Where the seats stand, as blender/build_props.py models them: in a
+        // ring round a lamp, or in a row on an arc before a screen.
+        private const float SeatHeight = 0.32f;
+        private const float RingRadius = 1.15f;
+        private const float ScreenAhead = 1.6f;
+        private const float ScreenCentre = 1.3f;
+        private const float RowRadius = 2.6f;
+        private static readonly float[] RingAngles = { 45f, 135f, 225f, 315f };
+        private static readonly float[] RowAngles = { -30f, -10f, 10f, 30f };
+
+        /// <summary>
+        /// Four seats to put down for a group: in a ring round a lamp, or in
+        /// a row facing a screen. The screen shows the world's video player
+        /// where the world shares its picture (see the shader), and a test
+        /// card where it does not.
+        ///
+        /// Each arrangement is a single mesh and the two are swapped, rather
+        /// than four cushions that move: left in the world, every cushion
+        /// would be a mesh and a material slot of its own. The four stations
+        /// do move, to wherever the cushions of the arrangement on show are.
+        /// </summary>
+        private static void Seats()
+        {
+            const string parameter = "WN/Seats";
+            const string row = "WN/SeatsRow";
+
+            var shader = Shader.Find("Wirenook/Video Screen");
+            var material = AssetFolders.LoadOrCreate(Generated + "/video-screen.mat", () => new Material(shader));
+            material.shader = shader;
+            EditorUtility.SetDirty(material);
+
+            // The picture: 16 by 9, facing back towards the seats.
+            var picture = AssetFolders.LoadOrCreate(Generated + "/video-screen-quad.asset", () => new Mesh());
+            picture.Clear();
+            picture.name = "video-screen-quad";
+            picture.vertices = new[] { new Vector3(-0.96f, -0.54f), new Vector3(0.96f, -0.54f), new Vector3(0.96f, 0.54f), new Vector3(-0.96f, 0.54f) };
+            picture.uv = new[] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) };
+            picture.normals = Enumerable.Repeat(Vector3.back, 4).ToArray();
+            picture.triangles = new[] { 0, 3, 2, 0, 2, 1 };
+            picture.RecalculateBounds();
+            EditorUtility.SetDirty(picture);
+
+            var ring = RingAngles.Select(angle => Place(Quaternion.Euler(0f, angle, 0f) * Vector3.forward * RingRadius, Vector3.zero)).ToArray();
+            var screenFoot = Vector3.forward * ScreenAhead;
+            var theatre = RowAngles.Select(angle => Place(screenFoot - Quaternion.Euler(0f, angle, 0f) * Vector3.forward * RowRadius, screenFoot)).ToArray();
+
+            SyncedAnchor.Prepare();
+            FeaturePrefab.Edit(SeatsPrefab, root =>
+            {
+                var carry = FeaturePrefab.Child(root, "Carry");
+                // Far enough ahead that the wearer is outside the ring.
+                carry.transform.localPosition = new Vector3(0f, 0f, RingRadius + 0.75f);
+
+                var place = FeaturePrefab.Child(root, "Place");
+                var rig = SyncedAnchor.Configure(root, place, carry.transform, parameter);
+                var model = RigidProp.Build(place, Models + "/seats.fbx", Generated);
+                var circle = FeaturePrefab.Find(model, "Seats.Ring");
+                var facing = FeaturePrefab.Find(model, "Seats.Row");
+
+                var screen = FeaturePrefab.Child(facing.gameObject, "Screen");
+                screen.transform.SetPositionAndRotation(
+                    model.transform.TransformPoint(new Vector3(0f, ScreenCentre, ScreenAhead)), model.transform.rotation);
+                FeaturePrefab.Ensure<MeshFilter>(screen).sharedMesh = picture;
+                var renderer = FeaturePrefab.Ensure<MeshRenderer>(screen);
+                renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                // Drawn by a shader of this package's own, and mobile builds
+                // may only use VRChat's. There the surround stands empty.
+                FeaturePrefab.Ensure<Wirenook.Assets.WirenookPcOnly>(screen);
+
+                var seats = new List<string>();
+                for (var i = 0; i < ring.Length; i++)
+                {
+                    var seat = FeaturePrefab.Child(place, "Seat " + (i + 1));
+                    seat.transform.localPosition = ring[i].position;
+                    seat.transform.localRotation = Quaternion.Euler(0f, ring[i].heading, 0f);
+                    ConfigureStation(seat, seat.transform, seated: true, new Vector3(0.6f, 0.5f, 0.6f), new Vector3(0f, 0.1f, 0f));
+                    seats.Add(FeaturePrefab.PathTo(root, seat.transform));
+                }
+
+                var fx = ControllerBuilder.Rebuild(Generated + "/seats-fx.controller");
+                fx.Bool(parameter).Bool(row);
+                PopToggle.Layer(fx, "Seats Ring", FeaturePrefab.PathTo(root, circle),
+                    on => on.IfTrue(parameter).IfFalse(row), off => off.IfFalse(parameter).Or().IfTrue(row));
+                PopToggle.Layer(fx, "Seats Row", FeaturePrefab.PathTo(root, facing),
+                    on => on.IfTrue(parameter).IfTrue(row), off => off.IfFalse(parameter).Or().IfFalse(row));
+                rig.AddLayers(fx, parameter, PopToggle.DisappearSeconds);
+
+                AnimationClip Stations(string name, (Vector3 position, float heading)[] places, bool open) =>
+                    fx.Clip("seats " + name, clip =>
+                    {
+                        for (var i = 0; i < seats.Count; i++)
+                        {
+                            clip.Constant(seats[i], typeof(Transform), "m_LocalPosition.x", places[i].position.x)
+                                .Constant(seats[i], typeof(Transform), "m_LocalPosition.y", places[i].position.y)
+                                .Constant(seats[i], typeof(Transform), "m_LocalPosition.z", places[i].position.z)
+                                .Constant(seats[i], typeof(Transform), "localEulerAnglesRaw.x", 0f)
+                                .Constant(seats[i], typeof(Transform), "localEulerAnglesRaw.y", places[i].heading)
+                                .Constant(seats[i], typeof(Transform), "localEulerAnglesRaw.z", 0f)
+                                .Constant(seats[i], typeof(BoxCollider), "m_Enabled", open ? 1f : 0f);
+                            Gate(clip, seats[i], open);
+                        }
+                    });
+
+                var layer = fx.Layer("Seats Stations");
+                var away = layer.State("Away", Stations("away", ring, false));
+                var inRing = layer.State("Ring", Stations("ring", ring, true));
+                var inRow = layer.State("Row", Stations("row", theatre, true));
+                away.To(inRing).IfTrue(parameter).IfFalse(row);
+                away.To(inRow).IfTrue(parameter).IfTrue(row);
+                inRing.To(inRow).IfTrue(parameter).IfTrue(row);
+                inRow.To(inRing).IfTrue(parameter).IfFalse(row);
+                inRing.To(away).IfFalse(parameter);
+                inRow.To(away).IfFalse(parameter);
+                fx.Save();
+
+                FeaturePrefab.Merge(root, fx.Controller);
+                FeaturePrefab.Parameters(root, rig.Parameters()
+                    .Prepend(FeaturePrefab.SyncedBool(row)).Prepend(FeaturePrefab.SyncedBool(parameter)).ToArray());
+                FeaturePrefab.InstallMenu(root);
+                FeaturePrefab.MenuFolder(root, "Seats", "ring");
+                FeaturePrefab.MenuToggle(FeaturePrefab.Child(root, "Menu Seats"), "Seats", "ring", parameter);
+                FeaturePrefab.MenuToggle(FeaturePrefab.Child(root, "Menu Screen"), "Face A Screen", "screen", row);
+                FeaturePrefab.Describe(root, "seats", "Seats", "ring", "seats", 55);
+            });
+        }
+
+        /// <summary>A seat at a spot, on top of its cushion, turned to face a point.</summary>
+        private static (Vector3 position, float heading) Place(Vector3 spot, Vector3 towards)
+        {
+            var look = towards - spot;
+            return (new Vector3(spot.x, SeatHeight, spot.z), Mathf.Atan2(look.x, look.z) * Mathf.Rad2Deg);
+        }
+
         private static void ConfigureStation(GameObject holder, Transform location, bool seated, Vector3 size, Vector3 centre)
         {
             var station = FeaturePrefab.Ensure<VRCStation>(holder);
@@ -233,14 +375,14 @@ namespace Wirenook.AvatarStations.Editor
             return x > y && x > z ? "x" : y > z ? "y" : "z";
         }
 
-        /// <summary>Both features behind one "Stations" menu entry.</summary>
-        private static void Bundle()
+        /// <summary>A set of these features behind one "Stations" menu entry.</summary>
+        private static void Bundle(string bundlePath, params string[] featurePrefabs)
         {
-            FeaturePrefab.Edit(BundlePrefab, root =>
+            FeaturePrefab.Edit(bundlePath, root =>
             {
                 FeaturePrefab.InstallMenu(root);
                 FeaturePrefab.MenuFolder(root, "Stations", "seat");
-                foreach (var path in new[] { SeatPrefab, TeleporterPrefab })
+                foreach (var path in featurePrefabs)
                 {
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     var instance = root.transform.Cast<Transform>()

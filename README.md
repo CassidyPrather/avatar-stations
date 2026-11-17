@@ -17,7 +17,9 @@ and animator at build time.
 | --- | --- | --- | --- | --- |
 | `Wirenook Carry Seat` | Carry Seat | A cloud floats beside you; a friend clicks it to sit and is carried along. | 1 | 1 |
 | `Wirenook Teleporter` | Catch-up Portal | A doorway appears a step in front of you and stays there. Anyone who clicks it arrives just behind you, wherever you have gone since. | 1 | 67 |
-| `Wirenook Stations` | Stations ▸ | Both of the above behind one menu entry. | 2 | 68 |
+| `Wirenook Seats` | Seats ▸ | Four cushions to put down for a group: in a ring round a lamp, or in a row facing a screen that shows the world's video player. | 4 | 68 |
+| `Wirenook Stations` | Stations ▸ | The carry seat and the portal behind one menu entry. | 2 | 68 |
+| `Wirenook Stations (Event)` | Stations ▸ | All three behind one menu entry: every station an avatar can have. | 6 | 136 |
 
 ### Carry seat
 
@@ -46,6 +48,25 @@ doorway wherever you happened to be standing at that moment. The
 [world-sync README](https://github.com/CassidyPrather/world-sync) explains
 how, and what about it is still untested.
 
+### Seats
+
+"Seats" puts four cushions down a little ahead of you, in a ring round a lamp, and leaves them there; switching
+it off picks them up. "Face A Screen" swaps the ring for a row on an arc in front of a screen. Their place is
+synced the way the portal's is, for the same reason: the people who most need a seat are the ones who arrive
+late.
+
+The two arrangements are two meshes, one shown at a time, rather than four cushions that move. A prop left in
+the world has to be a mesh of its own, and four moving cushions would be four meshes and four material slots
+where this is two. The four stations do move, to the cushions of whichever arrangement is on show. Anyone seated
+when you swap is carried to their new place.
+
+**The screen.** An avatar cannot reach a world's video player. Many players publish their picture as a global
+texture named `_Udon_VideoTex` for avatars and props to use (ProTV, VideoTXL and USharpVideo among them), and
+`Wirenook/Video Screen` draws that, fitted inside 16:9 without stretching. In a world that does not set it, or
+while nothing is playing, the screen shows a test card instead. It carries no sound of its own: the sound is the
+world's, wherever the world plays it. On Android and iOS the picture is left out (it is a custom shader) and the
+surround stands empty; the seats are kept.
+
 ## The station pool
 
 VRChat keeps **six** stations working on one avatar and silently disables
@@ -67,6 +88,10 @@ the planned next step once more than a couple of features compete for them.
   not laggy" and wants tuning in game.
 - The wearer may be able to click their own stations; VRChat's
   documentation does not say.
+- The seats have only been built and looked at in the Unity editor, where the screen shows its test card. That a
+  world's video reaches the screen rests on the `_Udon_VideoTex` convention, which was not tried against a real
+  player; colour and brightness may want adjusting when it is. What happens to someone seated while the
+  arrangement is swapped is also untried.
 
 ## Rebuilding the generated assets
 
