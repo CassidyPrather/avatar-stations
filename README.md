@@ -16,18 +16,46 @@ and animator at build time.
 | Prefab | Menu | What it does | Stations | Synced bits |
 | --- | --- | --- | --- | --- |
 | `Wirenook Carry Seat` | Carry Seat | A cloud floats beside you; a friend clicks it to sit and is carried along. | 1 | 1 |
-| `Wirenook Teleporter` | Catch-up Portal | A doorway appears a step in front of you and stays there. Anyone who clicks it arrives just behind you, wherever you have gone since. | 1 | 67 |
+| `Wirenook Teleporter` | Catch-up Portal | A doorway you aim with your right hand and set down with a fist. Anyone who clicks it arrives just behind you, wherever you have gone since. | 1 | 68 |
 | `Wirenook Seats` | Seats ▸ | Four cushions to put down for a group: in a ring round a lamp, or in a row facing a screen that shows the world's video player. | 4 | 68 |
-| `Wirenook Stations` | Stations ▸ | The carry seat and the portal behind one menu entry. | 2 | 68 |
-| `Wirenook Stations (Event)` | Stations ▸ | All three behind one menu entry: every station an avatar can have. | 6 | 136 |
+| `Wirenook Stations` | Stations ▸ | The carry seat and the portal behind one menu entry. | 2 | 69 |
+| `Wirenook Stations (Event)` | Stations ▸ | All three behind one menu entry: every station an avatar can have. | 6 | 137 |
 
 ### Carry seat
 
-The cloud is not attached to you rigidly. It chases a point beside you
-through a constraint with smoothing, so your starts, stops and turns reach
-your passenger eased out instead of as jolts. It bobs slowly while it is
-out. Switching it off stops new riders but does not throw off someone who
-is already seated; they leave by moving, as with any VRChat seat.
+The cloud is not attached to you rigidly. It is eased after you through
+constraints with smoothing, so your starts, stops and turns reach your
+passenger softened instead of as jolts. It bobs slowly while it is out.
+Switching it off stops new riders but does not throw off someone who is
+already seated; they leave by moving, as with any VRChat seat.
+
+Turning is eased much more slowly than walking. A thumbstick turn moves you
+45 degrees in a single frame, and a seat held rigidly beside you would jump
+0.64 m sideways and turn its passenger's whole view with it. So where you
+stand and which way you face are followed separately:
+
+| | Smoothing | What it does |
+| --- | --- | --- |
+| Where you stand | 0.12 s | The seat makes up ground quickly when you walk off or stop. |
+| Which way you face | 0.6 s | A turn carries the seat round you in an arc, slowly, rather than dragging it straight to its new place. One 45 degree turn becomes a swing that peaks near 50 degrees a second and is nine tenths done after a second and a half. |
+| Both, once more | 0.1 s | A second, short easing, so the seat starts moving gently. One easing alone moves fastest in its first instant. |
+
+The numbers are VRChat's
+[smoothing factor](https://creators.vrchat.com/common-components/constraints/constraints-api):
+the seconds a constraint takes to cover 63% of the way to its target, so
+larger is slower. They are `SeatFollowSeconds`, `SeatTurnSeconds` and
+`SeatSettleSeconds` in `Editor/AvatarStationsBuild.cs`. The first and third
+together set how far the seat trails you on the move: your speed times
+their sum, which is 0.9 m at a 4 m/s run.
+
+All of this happens under an object held still in the world (Freeze To
+World, switched on by the animator's first frame). VRChat documents the
+smoothing as a blend from the constraint's "current" pose and does not say
+whether that pose has already moved with the object's parent. Under the
+avatar it could have, which would leave a turn of the avatar with nothing
+to ease; under a parent that never moves, both readings agree.
+
+It costs four constraints, three deep, where it used to cost one.
 
 ### Catch-up portal
 
@@ -39,7 +67,15 @@ at the doorway (held in the world by
 arrival point is a spot just behind you. The traveller arrives standing and
 is carried with you until they walk or jump, which lets go.
 
-Switching the portal off picks it up.
+Switching the portal on does not drop it. You see it, and only you, where
+your right hand points, facing you; move the hand until it stands where
+you want it and close the hand into a fist to set it down. From then on
+everyone sees it and can step through. Pointing at nothing leaves it a
+step in front of you, where it used to be dropped. Switching it off before
+the fist cancels; switching it off afterwards picks it up. This is
+world-sync's `AimedCarry`, and costs one raycast and one more synced bit.
+While you aim, an avatar that reads hand claims (as the Cass avatar does)
+keeps its expression still, so the fist is not also a face.
 
 The portal's position is synced, not just frozen in place, which is where
 its 66 extra bits go. Whoever is far enough behind to need it may well
@@ -84,8 +120,13 @@ the planned next step once more than a couple of features compete for them.
 - Not yet run in the VRChat client. In particular, how the client treats a
   station whose arrival point is far from its collider is taken from how
   avatar teleporters are known to behave, not verified here.
-- The constraint smoothing value (`0.35`) is a first guess at "eased but
-  not laggy" and wants tuning in game.
+- The carry seat's easing is untested in the client. Its three smoothing
+  values come from VRChat's documented formula and a simulation of it, not
+  from sitting on the seat: whether a turn now feels gentle, whether the
+  slow swing is itself uncomfortable in a headset, and whether the seat
+  trails too far behind a run all want judging there, with a passenger.
+  That the seat eases at all rests on Freeze To World holding its parent
+  still, which other features here use but this one has not been seen doing.
 - The wearer may be able to click their own stations; VRChat's
   documentation does not say.
 - The seats have only been built and looked at in the Unity editor, where the screen shows its test card. That a

@@ -7,6 +7,7 @@ using UnityEngine;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Dynamics.Constraint.Components;
 using VRC.Dynamics;
+using Wirenook.Assets;
 using Wirenook.Assets.Editor;
 using Wirenook.WorldSync.Editor;
 using Station = VRC.SDKBase.VRCStation;
@@ -61,29 +62,122 @@ namespace Wirenook.AvatarStations.Editor
             Debug.Log("[avatar-stations] Rebuilt prefabs and animators.");
         }
 
+        // How the carry seat eases after the wearer. Each is a VRChat
+        // constraint smoothing factor: the seconds a constraint takes to
+        // cover 63% of the way to where it should be, so larger is slower
+        // and zero is rigid. Untested in the client; tune them there.
+
+        /// <summary>
+        /// How soon the seat makes up ground when the wearer walks off or
+        /// stops. With <see cref="SeatSettleSeconds"/> it sets how far the
+        /// seat trails a wearer on the move: their speed times the sum,
+        /// which at a 4 m/s run is 0.9 m.
+        /// </summary>
+        private const float SeatFollowSeconds = 0.12f;
+
+        /// <summary>
+        /// How soon the seat comes round when the wearer turns. Much slower
+        /// than <see cref="SeatFollowSeconds"/>: a thumbstick turn is 45
+        /// degrees in a single frame, and it is the passenger's whole view
+        /// that turns with the seat. At 0.6 one such turn reaches the seat
+        /// as a swing that peaks near 50 degrees a second and is nine tenths
+        /// done after a second and a half.
+        /// </summary>
+        private const float SeatTurnSeconds = 0.6f;
+
+        /// <summary>
+        /// A second, short easing after the two above, which is what makes
+        /// the seat start moving gently. One easing alone moves fastest in
+        /// its first instant: after a snap turn the seat would set off at
+        /// full speed and only then slow down.
+        /// </summary>
+        private const float SeatSettleSeconds = 0.1f;
+
         /// <summary>
         /// A cloud that trails beside the wearer with a passenger on it. The
-        /// cloud is not parented to the avatar's motion directly: it chases a
-        /// point beside the wearer through a smoothed constraint, so starts,
-        /// stops and turns reach the passenger eased rather than rigid.
+        /// cloud is not parented to the avatar's motion directly: it is eased
+        /// after the wearer, so starts, stops and turns reach the passenger
+        /// softened rather than rigid.
+        ///
+        /// Where the wearer stands and which way they face are eased
+        /// separately, the facing far more slowly, and the seat hangs off the
+        /// eased result at arm's length. A turn therefore carries the seat
+        /// round the wearer in an arc, at the slow pace of the facing,
+        /// instead of dragging it straight to its new place (0.64 m sideways
+        /// for one thumbstick turn, and through the wearer for a half turn).
+        ///
+        /// All the easing happens under an object that is held still in the
+        /// world. VRChat's documentation gives the smoothing formula as a
+        /// blend from the constraint's "current" pose and does not say
+        /// whether that pose has already been carried along by the object's
+        /// parent. Under the avatar it could have been, and then a turn of
+        /// the avatar would leave nothing to ease; under a parent that never
+        /// moves, both readings give the same answer.
         /// </summary>
         private static void CarrySeat()
         {
             const string parameter = "WN/Seat";
             FeaturePrefab.Edit(SeatPrefab, root =>
             {
+                // Where the wearer stands. It moves with the avatar, rigidly.
                 var follow = FeaturePrefab.Child(root, "Follow");
+                follow.transform.localPosition = Vector3.zero;
+                follow.transform.localRotation = Quaternion.identity;
+
+                // Held still in the world from the animator's first frame
+                // (see the layer below). Where it is held does not matter.
+                var world = FeaturePrefab.Child(root, "World");
+                WorldAnchor.Configure(world, follow.transform);
+
+                var swing = FeaturePrefab.Child(world, "Swing");
+                var position = FeaturePrefab.Ensure<VRCPositionConstraint>(swing);
+                position.ClearSources();
+                position.AddSource(new VRCConstraintSource { SourceTransform = follow.transform, Weight = 1f });
+                position.PositionOffset = Vector3.zero;
+                position.IsActive = true;
+                // Unlocked constraints re-measure their offset instead of moving the object.
+                position.Locked = true;
+                position.FreezeToWorld = false;
+                position.SmoothingFactor = SeatFollowSeconds;
+
+                var rotation = FeaturePrefab.Ensure<VRCRotationConstraint>(swing);
+                rotation.ClearSources();
+                rotation.AddSource(new VRCConstraintSource { SourceTransform = follow.transform, Weight = 1f });
+                rotation.RotationOffset = Vector3.zero;
+                rotation.IsActive = true;
+                rotation.Locked = true;
+                rotation.FreezeToWorld = false;
+                rotation.SmoothingFactor = SeatTurnSeconds;
+
                 // Beside and a little behind: out of the wearer's own way,
                 // close enough to chat over a shoulder.
-                follow.transform.localPosition = new Vector3(-0.7f, 0.15f, -0.45f);
+                var beside = FeaturePrefab.Child(swing, "Beside");
+                beside.transform.localPosition = new Vector3(-0.7f, 0.15f, -0.45f);
+                beside.transform.localRotation = Quaternion.identity;
 
-                var seat = FeaturePrefab.Child(root, "Seat");
+                // Prefabs built before the seat was eased in the world keep
+                // it directly under the root. Move that one rather than make
+                // a second: its station is the one already on people's avatars.
+                var seatHolder = root.transform.Find("Seat");
+                if (seatHolder != null) seatHolder.SetParent(world.transform, false);
+                var seat = FeaturePrefab.Child(world, "Seat");
+                // Where the constraint will put it, for anything that shows
+                // the prefab without running constraints.
+                seat.transform.localPosition = beside.transform.localPosition;
+                seat.transform.localRotation = Quaternion.identity;
                 var constraint = FeaturePrefab.Ensure<VRCParentConstraint>(seat);
                 constraint.ClearSources();
-                constraint.AddSource(new VRCConstraintSource { SourceTransform = follow.transform, Weight = 1f });
+                constraint.AddSource(new VRCConstraintSource
+                {
+                    SourceTransform = beside.transform,
+                    Weight = 1f,
+                    ParentPositionOffset = Vector3.zero,
+                    ParentRotationOffset = Vector3.zero,
+                });
                 constraint.IsActive = true;
                 constraint.Locked = true;
-                constraint.SmoothingFactor = 0.35f;
+                constraint.FreezeToWorld = false;
+                constraint.SmoothingFactor = SeatSettleSeconds;
 
                 var model = RigidProp.Build(seat, Models + "/cloud-seat.fbx", Generated);
                 var cloud = FeaturePrefab.Find(model, "CloudSeat");
@@ -95,9 +189,15 @@ namespace Wirenook.AvatarStations.Editor
                 var fx = ControllerBuilder.Rebuild(Generated + "/carry-seat-fx.controller");
                 var stationPath = FeaturePrefab.PathTo(root, station.transform);
                 var cloudPath = FeaturePrefab.PathTo(root, cloud);
+                var worldPath = FeaturePrefab.PathTo(root, world.transform);
                 var rest = cloud.localPosition;
                 PopToggle.Layer(fx, "Carry Seat", parameter, cloudPath, (clip, phase) =>
                 {
+                    // In every state, the seat's being out or not included:
+                    // someone may still be seated after it is switched off,
+                    // and the easing must not change under them.
+                    WorldAnchor.Freeze(clip, worldPath, true);
+
                     // The seat can only be taken while the cloud is fully out.
                     // Switching the collider off stops new riders without
                     // throwing off whoever is seated, which disabling the
@@ -143,10 +243,15 @@ namespace Wirenook.AvatarStations.Editor
                 var arrival = FeaturePrefab.Child(root, "Arrival");
                 arrival.transform.localPosition = new Vector3(0f, 0f, -0.8f);
 
+                // Aimed: switching the portal on shows it to the wearer where the right hand
+                // points, and a fist sets it down. A step in front is where it goes when the
+                // hand points at nothing.
+                var aim = AimedCarry.Configure(root, carry.transform, parameter + "/Aim");
+
                 var entrance = FeaturePrefab.Child(root, "Entrance");
                 // Synced, not just frozen: whoever is far enough behind to
                 // need the portal may well load the avatar after it was dropped.
-                var rig = SyncedAnchor.Configure(root, entrance, carry.transform, parameter);
+                var rig = SyncedAnchor.Configure(root, entrance, aim.Carry, parameter);
                 var model = RigidProp.Build(entrance, Models + "/portal.fbx", Generated);
                 var frame = FeaturePrefab.Find(model, "Portal");
                 var swirl = FeaturePrefab.Find(model, "Portal.Swirl");
@@ -164,19 +269,30 @@ namespace Wirenook.AvatarStations.Editor
                 // bone's axes that is depends on the export.
                 var through = swirl.InverseTransformDirection(model.transform.forward);
                 var axis = DominantAxis(through);
-                var states = rig.DropLayers(fx, "Teleporter", parameter, FeaturePrefab.PathTo(root, frame), (clip, phase) =>
+                var states = rig.DropLayers(fx, "Teleporter", parameter, aim, FeaturePrefab.PathTo(root, frame), (clip, phase) =>
                     {
-                        clip.Constant(stationPath, typeof(BoxCollider), "m_Enabled", phase == "on" ? 1f : 0f);
-                        Gate(clip, stationPath, phase == "on");
                         if (phase != "on") return;
                         clip.Curve(swirlPath, typeof(Transform), "localEulerAnglesRaw." + axis, AnimationCurve.Linear(0f, 0f, 3f, 360f));
                         clip.Loop();
                     });
                 WirenookSounds.PlayOnEnter(states.Appear, FeaturePrefab.PathTo(root, entrance.transform) + "/" + WirenookSounds.SourceName, "portal");
+
+                // The doorway can be stepped through once it has been set down, not while it
+                // is still being carried about on the end of a ray.
+                AnimationClip Door(bool open) => fx.Clip(open ? "teleporter door open" : "teleporter door shut", clip =>
+                {
+                    clip.Constant(stationPath, typeof(BoxCollider), "m_Enabled", open ? 1f : 0f);
+                    Gate(clip, stationPath, open);
+                });
+                var door = fx.Layer("Teleporter Door");
+                var shut = door.State("Shut", Door(false));
+                var open = door.State("Open", Door(true));
+                shut.To(open).IfTrue(parameter).IfTrue(aim.Dropped);
+                open.To(shut).IfFalse(parameter).Or().IfFalse(aim.Dropped);
                 fx.Save();
 
                 FeaturePrefab.Merge(root, fx.Controller);
-                FeaturePrefab.Parameters(root, rig.Parameters().Prepend(FeaturePrefab.SyncedBool(parameter)).ToArray());
+                FeaturePrefab.Parameters(root, rig.Parameters().Concat(aim.Parameters()).Prepend(FeaturePrefab.SyncedBool(parameter)).ToArray());
                 FeaturePrefab.InstallMenu(root);
                 FeaturePrefab.MenuToggle(root, "Catch-up Portal", "catch-up", parameter);
                 FeaturePrefab.Describe(root, "teleporter", "Catch-up portal", "catch-up", "teleporter", 70);
