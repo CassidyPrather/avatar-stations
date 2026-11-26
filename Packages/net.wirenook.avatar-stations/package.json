@@ -1,7 +1,7 @@
 {
   "name": "net.wirenook.avatar-stations",
   "displayName": "Wirenook Avatar Stations",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "unity": "2022.3",
   "description": "Seats, carriers and paired teleporters for VRChat avatars, sharing one station pool.",
   "author": {
@@ -13,8 +13,10 @@
   "vpmDependencies": {
     "com.vrchat.avatars": "^3.10.6",
     "nadena.dev.modular-avatar": "^1.18.7",
-    "net.wirenook.assets": "^0.1.0",
-    "net.wirenook.world-sync": "^0.1.0"
+    "net.wirenook.assets": "^0.2.0",
+    "net.wirenook.world-sync": "^0.2.0"
   },
-  "url": "https://github.com/CassidyPrather/avatar-stations"
+  "url": "https://github.com/CassidyPrather/avatar-stations",
+  "documentationUrl": "https://github.com/CassidyPrather/avatar-stations#readme",
+  "changelogUrl": "https://github.com/CassidyPrather/avatar-stations/releases"
 }
