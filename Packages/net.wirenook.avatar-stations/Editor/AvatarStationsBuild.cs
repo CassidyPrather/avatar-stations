@@ -260,7 +260,7 @@ namespace Wirenook.AvatarStations.Editor
                 // Standing, not seated: the traveller arrives on their feet
                 // and walks or jumps off to let go.
                 ConfigureStation(station, arrival.transform, seated: false, new Vector3(0.8f, 1.8f, 0.35f), new Vector3(0f, 0.95f, 0f));
-                WirenookSounds.Source(entrance);
+                WirenookSounds.Source(entrance, shared: false);
 
                 var fx = ControllerBuilder.Rebuild(Generated + "/teleporter-fx.controller");
                 var stationPath = FeaturePrefab.PathTo(root, station.transform);

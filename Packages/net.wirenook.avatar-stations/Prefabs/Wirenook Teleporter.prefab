@@ -2780,6 +2780,10 @@ MonoBehaviour:
   hand: 18
   alongFingers: 0.07
   intoPalm: 0.03
+  held: []
+  curl: 0.6
+  indexCurl: 0.6
+  thumbCurl: 0.8
 --- !u!1 &8871384755521499027
 GameObject:
   m_ObjectHideFlags: 0
